@@ -1,0 +1,51 @@
+/**
+* RoadMap qui donne les grandes lignes des développements a venir, en cours et terminés.
+*
+*
+*
+*   V1.0
+*
+*/
+
+
+IP = In Progress.
+
+
+OK - Créer un curseur clignotant.
+
+OK - mouvement du curseur
+
+IP - Prendre en compte les evenements clavier (faire une interface ?)
+
+IP - Selection du text
+
+OK - place holder
+
+- Modifier l'icone du curseur sur over !
+
+- ajouter une couche CSS ? (cf gwen)
+
+OK - suppression du text (droite gauche) (backspace - suppr)
+
+- ne pas depasser la box lorsque l'on saisie du text.
+
+- limiter le nombre de caractere (maxLength)
+
+OK - utiliser un attribut 'id' (à généraliser)
+
+OK - Positionner le curseur sur un clic.
+
+- AutoCompletion (gros sujet, à modulariser !)
+
+- validation (meme chose, a modulariser) proposer des type (email, number, color, tel. ZIP ..)   [utiliser les listeners pour la validation]
+
+- disable / enable
+
+- readonly
+
+- tabulation passe sur le input suivant...
+
+OK - uppercase / lower case
+
+
+
