@@ -17,7 +17,13 @@ OK - mouvement du curseur
 
 IP - Prendre en compte les evenements clavier (faire une interface ?)
 
-IP - Selection du text
+OK - Selection du text avec les fleches du clavier + SHIFT
+
+IP - suppression de la selection
+
+- selection du text avec la souris
+
+- deplacer le curseur sur une combinaison CTRL + ARROW de mot à mot
 
 OK - place holder
 
@@ -35,7 +41,7 @@ OK - utiliser un attribut 'id' (à généraliser)
 
 OK - Positionner le curseur sur un clic.
 
-- AutoCompletion (gros sujet, à modulariser !)
+- AutoCompletion (gros sujet, à modulariser !) (appel WS REST + JSON)
 
 - validation (meme chose, a modulariser) proposer des type (email, number, color, tel. ZIP ..)   [utiliser les listeners pour la validation]
 
