@@ -70,6 +70,10 @@ var CGSGInputTextNode = CGSGNode.extend(
 
             this.cursorPadding = 10;
 
+            this.maxlength = 10;
+
+            this.disabled = true;
+
             this.placeholder = 'hit something'; // TODO : transform it into textNode
             this.displayPlaceHolder = true;
 
@@ -156,26 +160,29 @@ var CGSGInputTextNode = CGSGNode.extend(
             var letter = this.getChar(keycode);
             var text = '';
 
-            // key pressed is 'alphanumeric' or 'space'
-            if ( (keycode >= 65 && keycode < 122) || keycode == 32 ) {
+            // check if its still possible to add text
+            if(this.maxlength == -1 || this.textNode._text.length < this.maxlength ) {
+                // key pressed is 'alphanumeric' or 'space'
+                if ( (keycode >= 65 && keycode < 122) || keycode == 32 ) {
 
-                letter = this.isLowerCase ? letter.toLowerCase() : letter;
+                    letter = this.isLowerCase ? letter.toLowerCase() : letter;
 
-                // if the cursor position is not at the end of the text (somewhere)
-                if (this.cursorLocation+1 < this.textNode._text.length) {
-                    // we have to add the letter between the others
+                    // if the cursor position is not at the end of the text (somewhere)
+                    if (this.cursorLocation+1 < this.textNode._text.length) {
+                        // we have to add the letter between the others
 
-                    var json = this.splitText(0, 0);
+                        var json = this.splitText(0, 0);
 
-                    text = this.textNode._text = json.firstPart + letter + json.secondPart;
-                    this.textNode.setText(text, false);
+                        text = this.textNode._text = json.firstPart + letter + json.secondPart;
+                        this.textNode.setText(text, false);
 
-                } else {
-                    text = this.textNode._text += letter;
-                    this.textNode.setText(text, false);
+                    } else {
+                        text = this.textNode._text += letter;
+                        this.textNode.setText(text, false);
 
+                    }
+                    this.moveCursor("right", false);
                 }
-                this.moveCursor("right", false);
             }
 
             // display or not the placeHolder
@@ -214,7 +221,6 @@ var CGSGInputTextNode = CGSGNode.extend(
 
                 case 46: // del
                     if (this.cursorLocation < this.textNode._text.length) {
-                        console.log("deletion !");
                         // if there is a selection, so delete the selected text
                         if (this.selectedTextNode.indexSelection != 0) {
                             json = this.splitText(0, this.selectedTextNode.text.length);
@@ -226,11 +232,9 @@ var CGSGInputTextNode = CGSGNode.extend(
                             text = json.firstPart + json.secondPart;
                             this.textNode.setText(text, false);
                         }
-
                         this._initShape();
                     }
                     return false;
-
             }
 
             if(this.isShift(e)){
@@ -256,7 +260,6 @@ var CGSGInputTextNode = CGSGNode.extend(
 
         moveCursor : function(actionType, isSelected) {
             // we get the size of the given letter
-            console.log("text : " + this.textNode._text + " type : " + actionType);
             var code = '';
             var w = 0;
 
@@ -294,10 +297,8 @@ var CGSGInputTextNode = CGSGNode.extend(
                 if (this.cursorLocation < textLength) {
                     code = this.textNode._text.charAt(this.cursorLocation);
                     w = this.computeTextWidth(code);
-                    console.log("next letter : " + code);
 
                     if (isSelected) {
-
                         if (this.selectedTextNode.indexSelection < 0) {
                             // remove 1 letter at the beginning
                             this.selectedTextNode.text = this.selectedTextNode.text.substring(0, this.selectedTextNode.text.length - 1);
@@ -319,7 +320,6 @@ var CGSGInputTextNode = CGSGNode.extend(
                     this.selectedTextNode.reset();
                 }
             }
-            console.log("the selected text : " + this.selectedTextNode.text);
         },
 
         /**
@@ -372,14 +372,12 @@ var CGSGInputTextNode = CGSGNode.extend(
             var padding = 0;
 
             this.tmpContext.beginPath();
-            this.tmpContext.fillStyle = "black";
+            this.tmpContext.strokeStyle = "#D4D4D4";
             this.tmpContext.font = this.font;
-            this.tmpContext.rect(0, 0, 300, 40);
+            this.tmpContext.rect(0, 0, this.dimension.width, this.dimension.height);
             this.tmpContext.stroke();
             //this.tmpContext.fillText(this.textNode._text, 10 + padding, 27);
             this.tmpContext.closePath();
-
-
 
             // draw the placeholder
             if (this.displayPlaceHolder) {
@@ -389,6 +387,16 @@ var CGSGInputTextNode = CGSGNode.extend(
                 this.tmpContext.fillText(this.placeholder, 10 + padding, 27);
                 this.tmpContext.closePath();
             }
+
+            // draw a disabled look field
+            if (this.disabled) {
+                this.tmpContext.beginPath();
+                this.tmpContext.fillStyle = "#F6F4F0";
+                this.tmpContext.fillRect(1, 1, this.dimension.width - 2, this.dimension.height - 2);
+                this.tmpContext.fill();
+                this.tmpContext.closePath();
+
+            } //F6F4F0
 
         },
 

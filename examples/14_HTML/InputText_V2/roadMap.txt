@@ -19,7 +19,7 @@ IP - Prendre en compte les evenements clavier (faire une interface ?)
 
 OK - Selection du text avec les fleches du clavier + SHIFT
 
-IP - suppression de la selection
+OK - suppression de la selection
 
 - selection du text avec la souris
 
@@ -35,9 +35,9 @@ OK - place holder
 
 OK - suppression du text (droite gauche) (backspace - suppr)
 
-- ne pas depasser la box lorsque l'on saisie du text.
+- ne pas depasser la box lorsque l'on saisie du text ou decaler le text si dépassement !
 
-- limiter le nombre de caractere (maxLength)
+OK - limiter le nombre de caractere (maxLength)
 
 OK - utiliser un attribut 'id' (à généraliser)
 
