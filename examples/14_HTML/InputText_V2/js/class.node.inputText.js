@@ -215,9 +215,18 @@ var CGSGInputTextNode = CGSGNode.extend(
                 case 46: // del
                     if (this.cursorLocation < this.textNode._text.length) {
                         console.log("deletion !");
-                        json = this.splitText(0, 1);
-                        text = json.firstPart + json.secondPart;
-                        this.textNode.setText(text, false);
+                        // if there is a selection, so delete the selected text
+                        if (this.selectedTextNode.indexSelection != 0) {
+                            json = this.splitText(0, this.selectedTextNode.text.length);
+                            text = json.firstPart + json.secondPart;
+                            this.textNode.setText(text, false);
+                            this.selectedTextNode.reset();
+                        } else {
+                            json = this.splitText(0, 1);
+                            text = json.firstPart + json.secondPart;
+                            this.textNode.setText(text, false);
+                        }
+
                         this._initShape();
                     }
                     return false;

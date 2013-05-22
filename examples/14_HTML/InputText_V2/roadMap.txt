@@ -27,6 +27,8 @@ IP - suppression de la selection
 
 OK - place holder
 
+- Ajout d'un "label for" (label qui suit le input text)
+
 - Modifier l'icone du curseur sur over !
 
 - ajouter une couche CSS ? (cf gwen)
