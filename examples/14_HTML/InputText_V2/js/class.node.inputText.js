@@ -55,7 +55,9 @@ var CGSGInputTextNode = CGSGNode.extend(
             // this give the location of the cursor among the letters, for instance : a|b give 1
             this.cursorLocation = 0;
 
-            this.font = "18px arial";
+            this.font = "arial";
+
+            this.fontSize = "16";
 
             /**
              * Define the class type.
@@ -66,15 +68,21 @@ var CGSGInputTextNode = CGSGNode.extend(
 
             this.isDraggable = false;
 
-            this.isLowerCase = false;
+            this.toLowerCase = false;
+
+            this.toUpperCase = false;
+
+            //Specifies that element should automatically get focus when the page loads
+            this.autoFocus = false;
 
             this.cursorPadding = 10;
 
+            // Specifies the maximum number of characters allowed
             this.maxlength = 10;
 
-            this.disabled = true;
+            this.disabled = false;
 
-            this.placeholder = 'hit something'; // TODO : transform it into textNode
+            // display or not the placeHolder
             this.displayPlaceHolder = true;
 
             this.onClick = this.onClickHandler;
@@ -93,20 +101,28 @@ var CGSGInputTextNode = CGSGNode.extend(
             // represent the cursor (80% of the input text height)
             this.cursor = new CursorNode(this.cursorPadding, (0.3 * this.dimension.height) /2, 2, 0.7 * this.dimension.height);
 
-            // this is the entry text
-            // TODO : manage the height of the text in order to correctly position the text
-            this.textNode = new CGSGNodeText(this.cursorPadding, 10, '');
+            // this node represent the text hit by the user
+            this.textNode = new CGSGNodeText(this.cursorPadding, this.cursor.position.y, '');
             this.textNode.color = "black";
-            this.textNode.setSize(16);
-            this.textNode.setTypo("arial");
+            this.textNode.setSize(this.fontSize);
+            this.textNode.setTypo(this.font);
             this.textNode.isTraversable = false;
             this.addChild(this.textNode);
 
+            // Specifies a short hint that describes the expected value
+            this.placeholder = new CGSGNodeText(this.cursorPadding, this.cursor.position.y, 'hit something');
+            this.placeholder.color = "#959595";
+            this.placeholder.setSize(this.fontSize);
+            this.placeholder.setTypo("italic");// + this.font;
+            this.placeholder.isTraversable = false;
+            this.addChild(this.placeholder);
+
+            // this node represent the placeHolder text that informs the user on which type of data we are waiting for.
             this.selectedTextNode = new TextSelectionNode(0, this.cursor.position.y, this.dimension.width, this.cursor.dimension.height);
             this.selectedTextNode.isTraversable = false;
             this.addChild(this.selectedTextNode);
 
-            //fake canvas to pre-render static display
+            // fake canvas to pre-render static display
             this._tmpCanvas = null;
             this._initShape();
 
@@ -114,18 +130,20 @@ var CGSGInputTextNode = CGSGNode.extend(
 
         onClickHandler : function(event) {
 
-            // check if the click position is in the input text or out ! in order to give focus or not.
+            // input text must be enable to get cursor !
+            if (!this.disabled) {
+                // find all cursor (normally only one !) in the graph
+                var cursors = this.traverser.traverse(this, function(node) { return node.classType == "CursorNode"; }, null);
 
-            // check if cursor is already add !!
-            var cursor = this.traverser.traverse(this, function(node) { return node.classType == "CursorNode"; }, null);
-
-            if (cursor.length == 0) {
-                this.addChild(this.cursor);
-            } else {
-                // move cursor to the click position
-                this.computeCursorLocation(event.position[0], cursor[0]);
-                // reset selection
-                this.selectedTextNode.reset();
+                // check if cursor is already add !!
+                if (cursors.length == 0) {
+                    this.addChild(this.cursor);
+                } else {
+                    // move cursor to the click position
+                    this.computeCursorLocation(event.position[0], cursors[0]);
+                    // reset selection if exist
+                    this.selectedTextNode.reset();
+                }
             }
 
         },
@@ -154,51 +172,52 @@ var CGSGInputTextNode = CGSGNode.extend(
         },
 
         keypressHandler : function(e) {
+            /**
+             * In keypress event, only get "which" code and not "keyCode"
+             * attribute else there are some conflict with code 32
+             * that represent a "pourcent" but also the "left arrow"
+             */
+            var which = e.which;
 
-            var keycode = this.getKeyCode(e);
+            if (which != 0) {
+                var letter = this.getChar(which);
+                var text = '';
 
-            var letter = this.getChar(keycode);
-            var text = '';
+                // check if its still possible to add text
+                if ( (this.maxlength == -1 || this.textNode._text.length < this.maxlength ) && !this.disabled) {
+                    // key pressed is 'alphanumeric'
+                    if ( which >= 32 && which <= 126 ) {
 
-            // check if its still possible to add text
-            if(this.maxlength == -1 || this.textNode._text.length < this.maxlength ) {
-                // key pressed is 'alphanumeric' or 'space'
-                if ( (keycode >= 65 && keycode < 122) || keycode == 32 ) {
+                        letter = this.toLowerCase ? letter.toLowerCase() : letter;
+                        letter = this.toUpperCase ? letter.toUpperCase() : letter;
 
-                    letter = this.isLowerCase ? letter.toLowerCase() : letter;
-
-                    // if the cursor position is not at the end of the text (somewhere)
-                    if (this.cursorLocation+1 < this.textNode._text.length) {
-                        // we have to add the letter between the others
-
-                        var json = this.splitText(0, 0);
-
-                        text = this.textNode._text = json.firstPart + letter + json.secondPart;
-                        this.textNode.setText(text, false);
-
-                    } else {
-                        text = this.textNode._text += letter;
-                        this.textNode.setText(text, false);
-
+                        // if the cursor position is not at the end of the text (somewhere)
+                        if (this.cursorLocation+1 < this.textNode._text.length) {
+                            // we have to add the letter between the others
+                            var json = this.splitText(0, 0);
+                            text = this.textNode._text = json.firstPart + letter + json.secondPart;
+                            this.textNode.setText(text, false);
+                        } else {
+                            text = this.textNode._text += letter;
+                            this.textNode.setText(text, false);
+                        }
+                        this.moveCursor("right", false);
                     }
-                    this.moveCursor("right", false);
                 }
+                // display or not the placeHolder
+                this.displayPlaceHolder = !!this.textNode._text.length == 0;
+
+                this._initShape();
             }
-
-            // display or not the placeHolder
-            this.displayPlaceHolder = !!this.textNode._text.length == 0;
-
-            this._initShape();
         },
 
-        // intercept the backspace button in order to don't go back in the browser
+
         keydownHandler : function(e) {
 
             var keycode = this.getKeyCode(e);
-
             var text = '';
 
-            // key pressed is backspace
+            // key pressed is backspace, intercept it in order to don't go back in the browser
             if (keycode === 8) {
                 e.preventDefault();
                 var json = this.splitText(1, 0);
@@ -228,6 +247,7 @@ var CGSGInputTextNode = CGSGNode.extend(
                             this.textNode.setText(text, false);
                             this.selectedTextNode.reset();
                         } else {
+                            // only delete one letter
                             json = this.splitText(0, 1);
                             text = json.firstPart + json.secondPart;
                             this.textNode.setText(text, false);
@@ -237,18 +257,15 @@ var CGSGInputTextNode = CGSGNode.extend(
                     return false;
             }
 
-            if(this.isShift(e)){
-                console.log("SHIFT PRESSED : " + this.cursor.position.x);
-            }
-
             this._initShape();
         },
 
         /**
-         * This function split the text in two part and can remove some letter in the given direction.
-         * @param leftStep
-         * @param rightStep
-         * @return {Object}
+         * This function split the text into two part from the cursor position
+         * and can remove some letter in the given direction.
+         * @param leftStep number of character to remove to the left
+         * @param rightStep number of character to remove to the right
+         * @return {Object} json parts
          */
         splitText : function(leftStep, rightStep) {
 
@@ -258,6 +275,12 @@ var CGSGInputTextNode = CGSGNode.extend(
             return {firstPart : firstpart, secondPart : secondpart};
         },
 
+        /**
+         * This function move the cursor in the given direction !
+         *
+         * @param actionType the direction to move the cursor
+         * @param isSelected if shift key is pressed, move cursor make a selection style
+         */
         moveCursor : function(actionType, isSelected) {
             // we get the size of the given letter
             var code = '';
@@ -369,34 +392,32 @@ var CGSGInputTextNode = CGSGNode.extend(
                 this.tmpContext = this._tmpCanvas.getContext('2d');
             }
 
-            var padding = 0;
-
             this.tmpContext.beginPath();
             this.tmpContext.strokeStyle = "#D4D4D4";
             this.tmpContext.font = this.font;
             this.tmpContext.rect(0, 0, this.dimension.width, this.dimension.height);
             this.tmpContext.stroke();
-            //this.tmpContext.fillText(this.textNode._text, 10 + padding, 27);
             this.tmpContext.closePath();
 
-            // draw the placeholder
-            if (this.displayPlaceHolder) {
-                this.tmpContext.beginPath();
-                this.tmpContext.fillStyle = "#959595";
-                this.tmpContext.font = 'italic 20px arial';
-                this.tmpContext.fillText(this.placeholder, 10 + padding, 27);
-                this.tmpContext.closePath();
-            }
-
-            // draw a disabled look field
+            // draw a "disabled" look & field
             if (this.disabled) {
                 this.tmpContext.beginPath();
                 this.tmpContext.fillStyle = "#F6F4F0";
                 this.tmpContext.fillRect(1, 1, this.dimension.width - 2, this.dimension.height - 2);
                 this.tmpContext.fill();
                 this.tmpContext.closePath();
+            }
 
-            } //F6F4F0
+            // show the placeholder or not
+            this.placeholder.isVisible = this.displayPlaceHolder;
+            //if () {
+                /*this.tmpContext.beginPath();
+                this.tmpContext.fillStyle = "#959595";
+                this.tmpContext.font = 'italic ' + this.font;
+                this.tmpContext.fillText(this.placeholder, 10, this.textNode.position.y);
+                this.tmpContext.closePath();*/
+
+            //}
 
         },
 
@@ -418,10 +439,6 @@ var CGSGInputTextNode = CGSGNode.extend(
             this.afterRender(context);
         },
 
-        getContext : function() {
-            return this._tmpCanvas.getContext('2d');
-        },
-
         getChar : function(keyCode) {
             return String.fromCharCode(keyCode);
         },
@@ -430,6 +447,11 @@ var CGSGInputTextNode = CGSGNode.extend(
             return (event.keyCode ? event.keyCode : event.which);
         },
 
+        /**
+         * Specify if the "SHIFT" key is pressed or not.
+         * @param event
+         * @return {Boolean} true, the key is pressed, otherwise false.
+         */
         isShift : function(event) {
             return !!event.shiftKey;
         }
@@ -440,7 +462,7 @@ var CGSGInputTextNode = CGSGNode.extend(
 
 
 /**
- *
+ * This node represent the look & feel of a selected text.
  * @type {*}
  */
 var TextSelectionNode = CGSGNode.extend(
@@ -519,6 +541,7 @@ var TextSelectionNode = CGSGNode.extend(
             return metrics.width;
         },
 
+        //TODO : may be put the move function into the node !
         moveSelection : function(direction, letter) {
 
             /*if(direction === "left") {
@@ -583,6 +606,7 @@ var CursorNode = CGSGNode.extend(
             this._initShape();
         },
 
+        //TODO : may be put the move function into the node !
 
         /**
          * Pre-render the cloud into a temp canvas to optimize the perfs
@@ -591,7 +615,6 @@ var CursorNode = CGSGNode.extend(
          */
         _initShape:function () {
             if(this._tmpCanvas != null) {
-                //TODO : check if it more perfomance than recreate canvas ;)
                 this._tmpCanvas.getContext('2d').clearRect(0, 0, this._tmpCanvas.width, this._tmpCanvas.height);
             } else {
                 this._tmpCanvas = document.createElement('canvas');
@@ -599,7 +622,7 @@ var CursorNode = CGSGNode.extend(
                 this._tmpCanvas.height = this.dimension.height;
                 this.tmpContext = this._tmpCanvas.getContext('2d');
             }
-
+            // draw the cursor
             this.tmpContext.beginPath();
             this.tmpContext.strokeStyle = this.cursorColor;
             this.tmpContext.lineTo(0, 0);

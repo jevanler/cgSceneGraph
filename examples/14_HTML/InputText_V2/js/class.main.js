@@ -55,8 +55,7 @@
 		 *
 		 */
 		createScene: function () {
-			this.squareNode = new CGSGInputTextNode(10, 10, 300, 40);
-
+			this.squareNode = new CGSGInputTextNode(100, 100, 300, 30);
 
 			this.sceneGraph.addNode(this.squareNode, null);
 		}

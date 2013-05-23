@@ -47,7 +47,7 @@ OK - Positionner le curseur sur un clic.
 
 - validation (meme chose, a modulariser) proposer des type (email, number, color, tel. ZIP ..)   [utiliser les listeners pour la validation]
 
-- disable / enable
+OK - disable / enable
 
 - readonly
 
